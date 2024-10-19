@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Paperclips - Remake</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        #paperclip-count, #wire-count, #funds-count, #public-demand, #clip-price {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        .button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        #upgrades, #marketing, #wire-buyer, #price-upgrade {
+            margin-top: 20px;
+            display: none;
+        }
+        #wire-purchase {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Universal Paperclips</h1>
+
+    <div id="paperclip-count">Paperclips: 0</div>
+    <div id="wire-count">Wire: 100</div>
+    <div id="funds-count">Funds: $0</div>
+    <div id="public-demand">Public Demand: 1</div>
+    <div id="clip-price">Paperclip Price: $1</div> <!-- Show current price -->
+
+    <button class="button" id="make-paperclip">Make a Paperclip</button>
+
+    <div id="wire-purchase">
+        <button class="button" id="buy-wire">Buy Wire ($15 for 100)</button>
+    </div>
+
+    <div id="upgrades">
+        <h2>Upgrades</h2>
+        <button class="button" id="buy-automation">Buy Auto-Clipper ($100)</button>
+        <p id="automation-status">Auto-Clipper: 0</p>
+    </div>
+
+    <div id="wire-buyer">
+        <h2>Wire Buyer</h2>
+        <button class="button" id="buy-wire-buyer">Buy Auto-Wire Buyer ($150)</button>
+        <button class="button" id="toggle-wire-buyer" style="display:none">Deactivate Auto-Wire Buyer</button>
+        <p id="wire-buyer-status">Auto-Wire Buyer: Off</p>
+    </div>
+
+    <div id="marketing">
+        <h2>Marketing</h2>
+        <button class="button" id="buy-marketing">Invest in Marketing ($50)</button>
+        <button class="button" id="buy-bulk-marketing">Invest in Bulk Marketing ($500)</button>
+        <p id="marketing-status">Marketing Level: 0</p>
+    </div>
+
+    <div id="price-upgrade">
+        <h2>Sell Upgrade</h2>
+        <button class="button" id="upgrade-price">Sell Paperclips for $2 ($200)</button>
+    </div>
+
+    <script>
+        let paperclips = 0;
+        let wire = 100;
+        let funds = 0;
+        let autoClipperCount = 0;
+        let autoClipperCost = 100; // Initial auto-clipper cost
+        let marketingLevel = 0;
+        let publicDemand = 1;  // Initial public demand (1 paperclip sold per second)
+        let wireBuyerEnabled = false;
+        let wireBuyerCost = 150; // Auto-wire buyer initial cost
+        let paperclipPrice = 1;  // Initial paperclip price ($1 per paperclip)
+
+        // Update all displayed stats (paperclips, wire, funds, public demand, paperclip price)
+        function updateDisplay() {
+            document.getElementById('paperclip-count').innerText = 'Paperclips: ' + paperclips;
+            document.getElementById('wire-count').innerText = 'Wire: ' + wire;
+            document.getElementById('funds-count').innerText = 'Funds: $' + funds;
+            document.getElementById('public-demand').innerText = 'Public Demand: ' + publicDemand;
+            document.getElementById('clip-price').innerText = 'Paperclip Price: $' + paperclipPrice;
+        }
+
+        // Make a paperclip if wire is available
+        document.getElementById('make-paperclip').addEventListener('click', function() {
+            if (wire > 0) {
+                paperclips++;
+                wire--;
+                updateDisplay();
+                checkUpgrades();
+            } else {
+                alert("Not enough wire! Buy more.");
+            }
+        });
+
+        // Buy more wire
+        document.getElementById('buy-wire').addEventListener('click', function() {
+            if (funds >= 15) {
+                wire += 100;
+                funds -= 15;
+                updateDisplay();
+            } else {
+                alert("Not enough funds!");
+            }
+        });
+
+        // Buy Auto-Clipper upgrade, price increases by 5% after each purchase
+        document.getElementById('buy-automation').addEventListener('click', function() {
+            if (funds >= autoClipperCost) {
+                autoClipperCount++;
+                funds -= autoClipperCost;
+                autoClipperCost = Math.ceil(autoClipperCost * 1.05); // Increase cost by 5%
+                document.getElementById('automation-status').innerText = 'Auto-Clipper: ' + autoClipperCount;
+                document.getElementById('buy-automation').innerText = 'Buy Auto-Clipper ($' + autoClipperCost + ')';
+                startAutoClippers();
+                updateDisplay();
+            } else {
+                alert("Not enough funds!");
+            }
+        });
+
+        // Automatically make paperclips using Auto-Clippers
+        function startAutoClippers() {
+            setInterval(function() {
+                if (wire > 0 && autoClipperCount > 0) {
+                    let clipperProduction = autoClipperCount; // Each clipper produces 1 paperclip/second
+                    paperclips += clipperProduction;
+                    wire -= clipperProduction;
+                    updateDisplay();
+                }
+            }, 1000); // 1 paperclip per second for each Auto-Clipper
+        }
+
+        // Buy Auto-Wire Buyer upgrade
+        document.getElementById('buy-wire-buyer').addEventListener('click', function() {
+            if (funds >= wireBuyerCost && !wireBuyerEnabled) {
+                wireBuyerEnabled = true;
+                funds -= wireBuyerCost;
+                document.getElementById('wire-buyer-status').innerText = 'Auto-Wire Buyer: On';
+                document.getElementById('buy-wire-buyer').style.display = 'none';
+                document.getElementById('toggle-wire-buyer').style.display = 'inline';
+                updateDisplay();
+                startAutoBuyWire();
+            } else {
+                alert("Not enough funds or already purchased!");
+            }
+        });
+
+        // Toggle Auto-Wire Buyer on/off
+        document.getElementById('toggle-wire-buyer').addEventListener('click', function() {
+            wireBuyerEnabled = !wireBuyerEnabled;
+            document.getElementById('wire-buyer-status').innerText = 'Auto-Wire Buyer: ' + (wireBuyerEnabled ? 'On' : 'Off');
+        });
+
+        // Automatically buy wire when low (below 20) if enabled
+        function startAutoBuyWire() {
+            setInterval(function() {
+                if (wireBuyerEnabled && wire < 20 && funds >= 15) {
+                    wire += 100;
+                    funds -= 15;
+                    updateDisplay();
+                }
+            }, 1000); // Check every second
+        }
+
+        // Invest in Marketing to increase public demand
+        document.getElementById('buy-marketing').addEventListener('click', function() {
+            if (funds >= 50) {
+                marketingLevel++;
+                publicDemand += 1; // Increase public demand (sell more paperclips per second)
+                funds -= 50;
+                document.getElementById('marketing-status').innerText = 'Marketing Level: ' + marketingLevel;
+                updateDisplay();
+                startSellingPaperclips();
+            } else {
+                alert("Not enough funds!");
+            }
+        });
+
+        // Invest in Bulk Marketing for a larger increase in public demand
+        document.getElementById('buy-bulk-marketing').addEventListener('click', function() {
+            if (funds >= 500) {
+                publicDemand += 10; // Large demand increase
+                funds -= 500;
+                updateDisplay();
+            } else {
+                alert("Not enough funds!");
+            }
+        });
+
+        // Upgrade the price of paperclips to $2
+        document.getElementById('upgrade-price').addEventListener('click', function() {
+            if (funds >= 200) {
+                paperclipPrice = 2; // Increase paperclip price
+                funds -= 200;
+                document.getElementById('clip-price').innerText = 'Paperclip Price: $2';
+                document.getElementById('upgrade-price').style.display = 'none'; // Hide upgrade once purchased
+                updateDisplay();
+            } else {
+                alert("Not enough funds!");
+            }
+        });
+
+        // Automatically sell paperclips at a rate based on public demand
+        function startSellingPaperclips() {
+            setInterval(function() {
+                if (paperclips > 0) {
+                    let sales = Math.min(paperclips, publicDemand); // Sell based on public demand
+                    paperclips -= sales;
+                    funds += sales * paperclipPrice; // Earn money based on paperclip price
+                    updateDisplay();
+                }
+            }, 1000); // Sales happen every second
+        }
+
+        // Start with initial public demand (1 paperclip sold per second)
+        startSellingPaperclips();
+
+    </script>
+
+</body>
+</html>

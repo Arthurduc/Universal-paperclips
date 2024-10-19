@@ -149,6 +149,22 @@
             }, 1000); // 1 paperclip per second for each Auto-Clipper
         }
 
+        // Ensure upgrades are displayed once enough paperclips are produced
+        function checkUpgrades() {
+            if (paperclips >= 100) {
+                document.getElementById('upgrades').style.display = 'block';
+            }
+            if (paperclips >= 200) {
+                document.getElementById('marketing').style.display = 'block';
+            }
+            if (paperclips >= 500) {
+                document.getElementById('wire-buyer').style.display = 'block';
+            }
+            if (paperclips >= 1000) {
+                document.getElementById('price-upgrade').style.display = 'block';
+            }
+        }
+
         // Buy Auto-Wire Buyer upgrade
         document.getElementById('buy-wire-buyer').addEventListener('click', function() {
             if (funds >= wireBuyerCost && !wireBuyerEnabled) {
@@ -201,18 +217,19 @@
                 publicDemand += 10; // Large demand increase
                 funds -= 500;
                 updateDisplay();
+                startSellingPaperclips();
             } else {
                 alert("Not enough funds!");
             }
         });
 
-        // Upgrade the price of paperclips to $2
+        // Upgrade paperclip price to $2
         document.getElementById('upgrade-price').addEventListener('click', function() {
             if (funds >= 200) {
                 paperclipPrice = 2; // Increase paperclip price
                 funds -= 200;
                 document.getElementById('clip-price').innerText = 'Paperclip Price: $2';
-                document.getElementById('upgrade-price').style.display = 'none'; // Hide upgrade once purchased
+                document.getElementById('upgrade-price').style.display = 'none'; // Hide after upgrade
                 updateDisplay();
             } else {
                 alert("Not enough funds!");
@@ -225,7 +242,7 @@
                 if (paperclips > 0) {
                     let sales = Math.min(paperclips, publicDemand); // Sell based on public demand
                     paperclips -= sales;
-                    funds += sales * paperclipPrice; // Earn money based on paperclip price
+                    funds += sales * paperclipPrice; // Earn $1 or $2 per paperclip sold
                     updateDisplay();
                 }
             }, 1000); // Sales happen every second
@@ -233,6 +250,8 @@
 
         // Start with initial public demand (1 paperclip sold per second)
         startSellingPaperclips();
+        // Start auto-buying wire when low
+        startAutoBuyWire();
 
     </script>
 
